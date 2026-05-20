@@ -1020,7 +1020,7 @@ function renderCalificaciones() {
             <table style="font-size:0.8rem; width:100%; border-collapse:collapse;">
                 <thead>
                     <tr style="background:#043222; color:white;">
-                        <th rowspan="2" style="min-width:150px;">Estudiante</th>
+                        <th rowspan="2" style="min-width:150px; position: sticky; left: 0; background: #043222; z-index: 10; border-right: 1px solid #000;">Estudiante</th>
                         <th colspan="${actsSer.length + 4}">SER (10)</th>
                         <th colspan="${actsSab.length + 1}">SABER (45)</th>
                         <th colspan="${actsHac.length + 1}">HACER (40)</th>
@@ -1063,7 +1063,7 @@ function renderCalificaciones() {
                     if(total > 100) total = 100;
 
                     html += `<tr>
-                        <td style="font-weight:bold;">${e.nombre}</td>
+                        <td style="font-weight:bold; position: sticky; left: 0; background: var(--blanco); z-index: 5; border-right: 2px solid #ddd; box-shadow: 2px 0 5px rgba(0,0,0,0.05);">${e.nombre}</td>
                         <td><input type="number" class="input-nota" value="${s1}" onchange="setVal(${e.id}, 'ser0', this.value)"></td>
                         <td><input type="number" class="input-nota" value="${s2}" onchange="setVal(${e.id}, 'ser1', this.value)"></td>
                         <td><input type="number" class="input-nota" value="${s3}" onchange="setVal(${e.id}, 'ser2', this.value)"></td>
@@ -1087,10 +1087,26 @@ function renderCalificaciones() {
 
     <div id="sec-masiva" style="display:none;">
         <div class="card" style="border-top: 5px solid #c0392b;">
-            <h4 style="color:#c0392b;">⚡ Carga Masiva a Columna N.M.</h4>
+            <h4 style="color:#c0392b;">⚡ Carga Masiva Inteligente</h4>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight:bold;">Seleccione la columna de destino:</label>
+                <select id="masiva-target" style="width:100%; padding:10px; border-radius:8px; border:2px solid #c0392b; font-weight:bold; margin-top:5px;">
+                    <option value="masiva">N.M. (Nota Masiva Adicional)</option>
+                    <option value="ser0">SER - S1</option>
+                    <option value="ser1">SER - S2</option>
+                    <option value="ser2">SER - S3</option>
+                    ${actsSer.map(a => `<option value="${a.id}">SER (Actividad): ${a.titulo}</option>`).join('')}
+                    ${actsSab.map(a => `<option value="${a.id}">SABER: ${a.titulo}</option>`).join('')}
+                    ${actsHac.map(a => `<option value="${a.id}">HACER: ${a.titulo}</option>`).join('')}
+                    <option value="auto">AUTOEVALUACIÓN</option>
+                    ${actsAut.map(a => `<option value="${a.id}">AUTO (Actividad): ${a.titulo}</option>`).join('')}
+                </select>
+            </div>
+
             <p>Pegue su lista de Excel. Formato: <b>Nombre [Espacio] Nota</b>. <br>El sistema detectará coincidencias de nombre/apellido automáticamente.</p>
             <textarea id="txt-notas-masivas" style="width:100%; height:250px; padding:12px; font-family:monospace; border:2px solid #ddd; border-radius:8px;" placeholder="JUAN PEREZ 85"></textarea>
-            <button class="btn-action" style="width:100%; margin-top:15px; background:var(--dorado); color:var(--verde-oscuro); font-weight:bold;" onclick="procesarNotasMasivas()">✅ CARGAR EN COLUMNA MASIVA</button>
+            <button class="btn-action" style="width:100%; margin-top:15px; background:var(--dorado); color:var(--verde-oscuro); font-weight:bold;" onclick="procesarNotasMasivas()">✅ CARGAR NOTAS</button>
         </div>
     </div>`;
 
@@ -1099,7 +1115,10 @@ function renderCalificaciones() {
 
 function procesarNotasMasivas() {
     const texto = document.getElementById('txt-notas-masivas').value;
+    const targetDest = document.getElementById('masiva-target').value;
     if(!texto.trim()) return alert("El campo está vacío.");
+
+    const parsedTarget = isNaN(targetDest) ? targetDest : parseInt(targetDest);
 
     const lineas = texto.split('\n');
     const estsMateria = estudiantes.filter(e => e.materiaId == materiaSeleccionadaId);
@@ -1129,7 +1148,7 @@ function procesarNotasMasivas() {
             });
 
             if (est) {
-                setVal(est.id, 'masiva', notaP);
+                setVal(est.id, parsedTarget, notaP);
                 cont++;
             } else {
                 noEncontrados.push(nombreInputRaw);
@@ -1138,7 +1157,7 @@ function procesarNotasMasivas() {
     });
 
     save();
-    let msg = `Éxito: Se cargaron ${cont} notas.`;
+    let msg = `Éxito: Se cargaron ${cont} notas a la columna seleccionada.`;
     if(noEncontrados.length > 0) {
         msg += `\n\n⚠️ No se encontraron coincidencias para:\n- ${noEncontrados.join('\n- ')}`;
     }
